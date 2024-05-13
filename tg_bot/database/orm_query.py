@@ -1,16 +1,19 @@
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
+
 from database.models import Task, User, Group
 
 
 
-async def set_user(session: AsyncSession, tg_id):
+async def set_user(session: AsyncSession, tg_id) -> bool:
     user = await session.scalar(select(User).where(User.tg_id==tg_id))
     if not user:
         session.add(User(tg_id=tg_id))
         await session.commit()
-
+        return False
+    else:
+        return True
 
 async def orm_add_task(session: AsyncSession, data: dict):
     obj = Task(

@@ -34,9 +34,10 @@ class MyTask(StatesGroup):
 
 @user_private_router.message(CommandStart())
 async def start_handler(message: types.Message, session: AsyncSession):
-    await set_user(session, message.from_user.id)
-    await message.answer("Hi", reply_markup=reply.start_kb)
-    
+    if await set_user(session, message.from_user.id) == True:
+        await message.answer("Привет", reply_markup=reply.start_kb)
+    else:
+        await message.answer("Новый", reply_markup=reply.start_kb)
 
 
 @user_private_router.message(StateFilter('*'), F.text.lower() == "cancel")
