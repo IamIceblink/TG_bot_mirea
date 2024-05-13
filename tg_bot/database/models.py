@@ -11,6 +11,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     tg_id = mapped_column(BigInteger)
+    name: Mapped[str] = mapped_column(String(30), nullable=True)
 
 
 class Group(Base):

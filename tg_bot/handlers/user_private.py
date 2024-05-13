@@ -4,7 +4,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_add_task, orm_get_tasks, set_user
+from database.orm_query import orm_add_task, orm_get_tasks, set_user, orm_your_name
 
 from keyboards import reply
 
@@ -25,19 +25,37 @@ class MyTask(StatesGroup):
     edit = State()
     delete = State()
 
+class NewUser(StatesGroup):
+    begin = State()
+    your_name = State()
+
 #FSM
 
 
 
 
-
-
-@user_private_router.message(CommandStart())
-async def start_handler(message: types.Message, session: AsyncSession):
+@user_private_router.message(StateFilter(None), CommandStart())
+async def start_handler(message: types.Message, session: AsyncSession, state: FSMContext):
     if await set_user(session, message.from_user.id) == True:
-        await message.answer("Привет", reply_markup=reply.start_kb)
+        await message.answer("Привет, ", reply_markup=reply.start_kb)
     else:
-        await message.answer("Новый", reply_markup=reply.start_kb)
+        await message.answer("СЮДА ДОБАВИТЬ ИНТРО", reply_markup=reply.begin_kb)
+        await state.set_state(NewUser.begin)
+
+
+@user_private_router.message(NewUser.begin, F.text)
+async def your_name_handler(message: types.Message, session: AsyncSession, state: FSMContext):
+    await state.update_data(your_name=message.text)
+    data = await state.get_data()
+    try:
+        await orm_your_name(session, message.from_user.id, data)
+        await message.answer("Your name was saved", reply_markup=reply.start_kb)
+        await state.clear() 
+    except Exception as e:
+        await message.answer(
+            "Error! Write shorter name", reply_markup=reply.begin_kb
+        )
+        await state.set_state(NewUser.begin)
 
 
 @user_private_router.message(StateFilter('*'), F.text.lower() == "cancel")

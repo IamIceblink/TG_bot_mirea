@@ -33,7 +33,7 @@ async def orm_get_tasks(session: AsyncSession):
     return result.scalars().all()
 
 
-async def orm_edit_task(session: AsyncSession, task_id: int, data):
+async def orm_edit_task(session: AsyncSession, task_id: int, data: dict):
     query = update(Task).where(Task.id == task_id).values(
         group = data["group"],
         name = data["name"],
@@ -46,5 +46,13 @@ async def orm_edit_task(session: AsyncSession, task_id: int, data):
 
 async def orm_delete_task(session: AsyncSession, task_id: int):
     query = delete(Task).where(Task.id == task_id)
+    await session.execute(query)
+    await session.commit()
+
+
+async def orm_your_name(session: AsyncSession, tg_id: int, data: dict):
+    query = update(User).where(User.tg_id == tg_id).values(
+        name = data["your_name"],
+    )
     await session.execute(query)
     await session.commit()
