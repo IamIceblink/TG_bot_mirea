@@ -139,9 +139,20 @@ async def get_task_handler(message: types.Message, session: AsyncSession, state:
 
 
 
-@user_private_router.message(Command('my_lists'))
-async def my_lists_handler(message: types.Message):
-    await message.answer("Here's your lists:")
+@user_private_router.message(Command('change_name'))
+async def your_name_handler(message: types.Message, session: AsyncSession, state: FSMContext):
+    await state.update_data(your_name=message.text)
+    data = await state.get_data()
+    try:
+        await orm_your_name(session, message.from_user.id, data)
+        await message.answer("Your name was saved", reply_markup=reply.start_kb)
+        await state.clear() 
+    except Exception as e:
+        await message.answer(
+            "Error! Write shorter name", reply_markup=reply.begin_kb
+        )
+        await state.clear()
+    
 
 
 

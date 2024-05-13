@@ -56,3 +56,5 @@ async def orm_your_name(session: AsyncSession, tg_id: int, data: dict):
     )
     await session.execute(query)
     await session.commit()
+
+
