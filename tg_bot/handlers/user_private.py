@@ -4,7 +4,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_add_task, orm_get_tasks, set_user, orm_your_name, orm_change_your_name, orm_get_name 
+from database.orm_query import orm_add_group, orm_add_task, orm_get_tasks, set_user, orm_your_name, orm_change_your_name, orm_get_name 
 
 from keyboards import reply
 
@@ -87,11 +87,38 @@ async def new_task_handler(message: types.Message, state: FSMContext):
     await state.set_state(NewTask.group)
 
 
-@user_private_router.message(NewTask.group, F.text)
+@user_private_router.message(NewTask.group, F.text != "New Group")
 async def choose_group_handler(message: types.Message, state: FSMContext):
     await state.update_data(group=message.text)#ВМЕСТО MESSAGE.TEXT ВЫБРАННАЯ ГРУППА ИЗ СПИСКА 
     await message.answer("Here's your task groups:", reply_markup=reply.new_group_kb)
     await state.set_state(NewTask.name)
+
+
+#---------------------------------------------------------------------------------------
+
+
+@user_private_router.message(NewTask.group, F.text == "New Group")
+async def new_group_name_handler(message: types.Message, state: FSMContext):
+    await message.answer("What is the name of your new group?", reply_markup=reply.cancel_kb)
+    await state.set_state(NewTask.newgroup)
+
+
+@user_private_router.message(NewTask.newgroup, F.text)
+async def new_group_name_acceptance_handler(message: types.Message, session: AsyncSession, state: FSMContext):
+    await state.update_data(newgroup=message.text)
+    data = await state.get_data() #(НУЖНО ИСПРАВИТЬ ПЕРЕДАЧУ FOREIGN KEY)
+    await orm_add_group(session, data)
+    await message.answer("New group was saved.", reply_markup=reply.start_kb)
+    await state.clear() 
+    #try:
+    #except Exception as e:
+        #await message.answer(
+            #"Error! Write shorter name", reply_markup=reply.begin_kb
+        #)
+        #await state.clear()
+
+
+#---------------------------------------------------------------------------------------    
 
 
 @user_private_router.message(NewTask.group)
@@ -138,24 +165,7 @@ async def get_task_handler(message: types.Message, session: AsyncSession, state:
     await state.set_state(MyTask.lists)
 
 
-#---------------------------------------------------------------------------------------
 
-
-@user_private_router.message(NewTask.group, F.text == "New Group")
-async def new_group_name_handler(message: types.Message, state: FSMContext):
-    await message.answer("What is the name of your new group?", reply_markup=reply.cancel_kb)
-    await state.set_state(NewTask.newgroup)
-
-
-@user_private_router.message(NewTask.newgroup, F.text)
-async def new_group_name_acceptance_handler(message: types.Message, state: FSMContext):
-    await state.update_data(newgroup=message.text)
-    #ПРОПИСАТЬ СЕТТЕР НОВОЙ ГРУППЫ using try
-    await message.answer("New group was saved.", reply_markup=reply.start_kb)
-    await state.clear()
-
-
-#---------------------------------------------------------------------------------------
 
 
 @user_private_router.message(Command('change_name'))
