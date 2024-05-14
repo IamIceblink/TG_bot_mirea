@@ -63,7 +63,6 @@ async def your_name_handler(message: types.Message, session: AsyncSession, state
         await message.answer(
             "Error! Write shorter name", reply_markup=reply.begin_kb
         )
-        await state.set_state(NewUser.begin)
 
 
 @user_private_router.message(StateFilter('*'), F.text.lower() == "cancel")
@@ -107,15 +106,14 @@ async def new_group_name_handler(message: types.Message, state: FSMContext):
 async def new_group_name_acceptance_handler(message: types.Message, session: AsyncSession, state: FSMContext):
     await state.update_data(newgroup=message.text)
     data = await state.get_data() #(НУЖНО ИСПРАВИТЬ ПЕРЕДАЧУ FOREIGN KEY)
-    await orm_add_group(session, data)
-    await message.answer("New group was saved.", reply_markup=reply.start_kb)
-    await state.clear() 
-    #try:
-    #except Exception as e:
-        #await message.answer(
-            #"Error! Write shorter name", reply_markup=reply.begin_kb
-        #)
-        #await state.clear()
+    try:
+        await orm_add_group(session, data, message.from_user.id)
+        await message.answer("New group was saved.", reply_markup=reply.start_kb)
+        await state.clear() 
+    except Exception as e:
+        await message.answer(
+            "Error! Write shorter name", reply_markup=reply.begin_kb
+        )
 
 
 #---------------------------------------------------------------------------------------    
@@ -148,9 +146,9 @@ async def choose_date_handler(message: types.Message, state: FSMContext, session
         await state.clear()
     except Exception as e:
         await message.answer(
-            "Error!", reply_markup=reply.start_kb
+            "Error! Write other name.", reply_markup=reply.start_kb
         )
-        await state.clear()
+        
 
 
 @user_private_router.message(NewTask.date)
@@ -188,7 +186,6 @@ async def accept_new_name_handler(message: types.Message, session: AsyncSession,
         await message.answer(
             "Error! Write shorter name", reply_markup=reply.begin_kb
         )
-        await state.clear()
     
 
 

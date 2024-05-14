@@ -19,9 +19,10 @@ async def set_user(session: AsyncSession, tg_id) -> bool:
 #-------------------------------------------------------------------------
     
 
-async def orm_add_group(session: AsyncSession, data: dict):
+async def orm_add_group(session: AsyncSession, data: dict, tg_id: int):
     obj = Group(
         name = data["newgroup"],
+        user = select(User.id).where(User.tg_id==tg_id)
     )
     session.add(obj)
     await session.commit()
