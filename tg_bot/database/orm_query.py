@@ -66,4 +66,10 @@ async def orm_change_your_name(session: AsyncSession, tg_id: int, data: dict):
     await session.commit()
 
 
+async def orm_get_name(session: AsyncSession, tg_id: int) -> str:
+    query = select(User.name).where(User.tg_id==tg_id)
+    result = await session.execute(query)
+    return result.scalar()
+
+
 

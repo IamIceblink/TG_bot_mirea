@@ -4,7 +4,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_add_task, orm_get_tasks, set_user, orm_your_name, orm_change_your_name
+from database.orm_query import orm_add_task, orm_get_tasks, set_user, orm_your_name, orm_change_your_name, orm_get_name 
 
 from keyboards import reply
 
@@ -44,7 +44,7 @@ class ChangeName(StatesGroup):
 @user_private_router.message(StateFilter(None), CommandStart())
 async def start_handler(message: types.Message, session: AsyncSession, state: FSMContext):
     if await set_user(session, message.from_user.id) == True:
-        await message.answer("Привет, ", reply_markup=reply.start_kb)
+        await message.answer(("Hello " + str(await orm_get_name(session, message.from_user.id)) + "!"), reply_markup=reply.start_kb)
     else:
         await message.answer("СЮДА ДОБАВИТЬ ИНТРО", reply_markup=reply.begin_kb)
         await state.set_state(NewUser.begin)
@@ -171,15 +171,15 @@ async def accept_new_name_handler(message: types.Message, session: AsyncSession,
 
 
 
-
-
-
-
-@user_private_router.message(or_f(F.text == "About 🤓", Command('about')))
+@user_private_router.message(F.text =="About 🤓")
 async def about_handler(message: types.Message):
     await message.answer("Authors: Ryabov V.M. Gilas A.D. Tuzhenkov K.G. IVBO-03-21 MIREA")
 
 
+
+@user_private_router.message(Command('about'))
+async def about_handler(message: types.Message):
+    await message.answer("Authors: Ryabov V.M. Gilas A.D. Tuzhenkov K.G. IVBO-03-21 MIREA")
 
 
 @user_private_router.message(F.audio)
