@@ -56,6 +56,9 @@ new_group_kb = ReplyKeyboardMarkup(
         [
         KeyboardButton(text="New Group"),
         ],
+        [
+        KeyboardButton(text="Cancel"),
+        ],
     ],
     resize_keyboard=True,
     input_field_placeholder="You can create a new group below..."
