@@ -49,3 +49,14 @@ begin_kb =ReplyKeyboardMarkup(
     ],
     input_field_placeholder="What is your name?"
 )
+
+
+new_group_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+        KeyboardButton(text="New Group"),
+        ],
+    ],
+    resize_keyboard=True,
+    input_field_placeholder="You can create a new group below..."
+)

@@ -1,5 +1,5 @@
 from aiogram import F, types, Router
-from aiogram.filters import CommandStart, Command, StateFilter, or_f
+from aiogram.filters import CommandStart, Command, StateFilter
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -76,6 +76,7 @@ async def cancel_handler(message:types.Message, state:FSMContext) -> None:
     await message.answer("Your operations were canceled.", reply_markup=reply.start_kb)
  
 
+#---------------------------------------------------------------------------------------
 
 
 @user_private_router.message(StateFilter(None), F.text == "New Task 😁")
@@ -84,20 +85,18 @@ async def new_task_handler(message: types.Message, state: FSMContext):
     await state.set_state(NewTask.group)
 
 
-
-
 @user_private_router.message(NewTask.group, F.text)
 async def choose_group_handler(message: types.Message, state: FSMContext):
-    await state.update_data(group=message.text)
+    #ПРОПИСАТЬ ГЕТТЕР ГРУПП
+    await state.update_data(group=message.text)#ВМЕСТО MESSAGE.TEXT ВЫБРАННАЯ ГРУППА ИЗ СПИСКА 
+    await message.answer("Here's your task groups:", reply_markup=reply.new_group_kb)
     await message.answer("Call your task", reply_markup=reply.cancel_kb)
     await state.set_state(NewTask.name)
 
 
 @user_private_router.message(NewTask.group)
-async def choose_group_handler(message: types.Message, state: FSMContext):
+async def choose_group_checker_handler(message: types.Message, state: FSMContext):
     await message.answer("Invalid group name", reply_markup=reply.cancel_kb)
-
-
 
 
 @user_private_router.message(NewTask.name, F.text)
@@ -110,8 +109,6 @@ async def call_name_handler(message: types.Message, state: FSMContext):
 @user_private_router.message(NewTask.name)
 async def call_name_handler(message: types.Message, state: FSMContext):
     await message.answer("Invalid task name", reply_markup=reply.cancel_kb)
-
-
 
 
 @user_private_router.message(NewTask.date, F.text)
@@ -128,13 +125,13 @@ async def choose_date_handler(message: types.Message, state: FSMContext, session
         )
         await state.clear()
 
-    
-    
 
 @user_private_router.message(NewTask.date)
 async def choose_date_handler(message: types.Message, state: FSMContext):
     await message.answer("Invalid date", reply_markup=reply.cancel_kb)
 
+
+#---------------------------------------------------------------------------------------
 
 
 @user_private_router.message(StateFilter(None), F.text == "My tasks 🙏")
@@ -182,23 +179,23 @@ async def about_handler(message: types.Message):
     await message.answer("Authors: Ryabov V.M. Gilas A.D. Tuzhenkov K.G. IVBO-03-21 MIREA")
 
 
-@user_private_router.message(F.audio)
+@user_private_router.message(StateFilter('*'), F.audio)
 async def audio_handler(message: types.Message):
     await message.answer("Bot doesn't support audio.")
 
 
 
 
-@user_private_router.message(F.photo)
+@user_private_router.message(StateFilter('*'), F.photo)
 async def photo_handler(message: types.Message):
     await message.answer("Bot doesn't recognise photos.")
 
 
 
 
-@user_private_router.message(F.sticker)
+@user_private_router.message(StateFilter('*'), F.sticker)
 async def sticker_handler(message: types.Message):
-    await message.answer("Task with stickers cannot be created.")
+    await message.answer("Bot doesn't recognise stickers.")
 
 
 

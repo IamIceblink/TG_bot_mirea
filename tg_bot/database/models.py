@@ -19,6 +19,7 @@ class Group(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(30))
+    user: Mapped[str] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
 
 
 class Task(Base):
