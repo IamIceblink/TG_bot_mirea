@@ -1,10 +1,10 @@
 from aiogram import F, types, Router
-from aiogram.filters import CommandStart, Command, StateFilter
+from aiogram.filters import CommandStart, Command, StateFilter, or_f
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_add_task, orm_get_tasks, set_user, orm_your_name
+from database.orm_query import orm_add_task, orm_get_tasks, set_user, orm_your_name, orm_change_your_name
 
 from keyboards import reply
 
@@ -25,9 +25,16 @@ class MyTask(StatesGroup):
     edit = State()
     delete = State()
 
+
 class NewUser(StatesGroup):
     begin = State()
     your_name = State()
+
+
+class ChangeName(StatesGroup):
+    change = State()
+    acceptance = State()
+
 
 #FSM
 
@@ -140,12 +147,20 @@ async def get_task_handler(message: types.Message, session: AsyncSession, state:
 
 
 @user_private_router.message(Command('change_name'))
-async def your_name_handler(message: types.Message, session: AsyncSession, state: FSMContext):
-    await state.update_data(your_name=message.text)
+async def change_name_handler(message: types.Message, session: AsyncSession, state: FSMContext):
+    await message.answer("What is your new name?", reply_markup=reply.cancel_kb)
+    await state.set_state(ChangeName.acceptance)
+
+
+
+
+@user_private_router.message(ChangeName.acceptance, F.text)
+async def accept_new_name_handler(message: types.Message, session: AsyncSession, state: FSMContext):
+    await state.update_data(acceptance=message.text)
     data = await state.get_data()
     try:
-        await orm_your_name(session, message.from_user.id, data)
-        await message.answer("Your name was saved", reply_markup=reply.start_kb)
+        await orm_change_your_name(session, message.from_user.id, data)
+        await message.answer("Your name was changed", reply_markup=reply.start_kb)
         await state.clear() 
     except Exception as e:
         await message.answer(
@@ -157,14 +172,10 @@ async def your_name_handler(message: types.Message, session: AsyncSession, state
 
 
 
-@user_private_router.message(Command('about'))
-async def about_handler(message: types.Message):
-    await message.answer("Authors: Ryabov V.M. Gilas A.D. Tuzhenkov K.G. IVBO-03-21 MIREA")
 
 
 
-
-@user_private_router.message(F.text == "About 🤓")
+@user_private_router.message(or_f(F.text == "About 🤓", Command('about')))
 async def about_handler(message: types.Message):
     await message.answer("Authors: Ryabov V.M. Gilas A.D. Tuzhenkov K.G. IVBO-03-21 MIREA")
 

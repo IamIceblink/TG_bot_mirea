@@ -58,3 +58,12 @@ async def orm_your_name(session: AsyncSession, tg_id: int, data: dict):
     await session.commit()
 
 
+async def orm_change_your_name(session: AsyncSession, tg_id: int, data: dict):
+    query = update(User).where(User.tg_id == tg_id).values(
+        name = data["acceptance"],
+    )
+    await session.execute(query)
+    await session.commit()
+
+
+
