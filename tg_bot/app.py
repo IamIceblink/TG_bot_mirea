@@ -1,11 +1,10 @@
-import sys
 import asyncio
 import os
 
 """This file is responsible for all bot commands."""
 
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters import CommandStart
+from aiogram.enums import ParseMode
 
 from dotenv import find_dotenv, load_dotenv
 load_dotenv(find_dotenv())
@@ -28,9 +27,9 @@ dp.include_router(user_private_router)
 
 async def on_startup(bot):
 
-    run_param = False
-    if run_param:
-        await drop_db()
+    #run_param = False
+    #if run_param:
+    #    await drop_db()
     
     await create_db()
 

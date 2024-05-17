@@ -1,20 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
-start_kb = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="New Task 😁"),
-            KeyboardButton(text="My tasks 🙏"),   
-        ],
-        [
-            KeyboardButton(text="About 🤓"),
-        ]
-    ],
-    resize_keyboard=True,
-    input_field_placeholder='Choose your command:'
-)
-
 
 cancel_kb =ReplyKeyboardMarkup(
     keyboard=[

@@ -16,16 +16,43 @@ async def set_user(session: AsyncSession, tg_id) -> bool:
         return True
     
 
+async def get_user_id(session:AsyncSession, td_id):
+    query = select(User.id).where(User.tg_id==td_id)
+    result = await session.execute(query)
+    return result.scalar()
+    
+
 #-------------------------------------------------------------------------
     
 
 async def orm_add_group(session: AsyncSession, data: dict, tg_id: int):
     obj = Group(
         name = data["newgroup"],
-        user = select(User.id).where(User.tg_id==tg_id)
+        user = select(User.tg_id).where(User.tg_id==tg_id)
     )
     session.add(obj)
     await session.commit()
+
+
+async def orm_get_groups(session: AsyncSession, tg_id: int):
+    query = select(Group).where(Group.user == tg_id)
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+async def orm_edit_group(session: AsyncSession, data: dict, group_id: int):
+    query = update(Group).where(Group.id == group_id).values(
+        name = data["new_name"]
+    )
+    await session.execute(query)
+    await session.commit()
+
+
+async def orm_delete_group(session: AsyncSession, group_id: int):
+    query = delete(Group).where(Group.id == group_id)
+    await session.execute(query)
+    await session.commit()
+
 
     
 #-------------------------------------------------------------------------
@@ -35,25 +62,21 @@ async def orm_add_task(session: AsyncSession, data: dict):
     obj = Task(
         group = data["group"],
         name = data["name"],
-        date = data["date"],
         is_done = False,
     )
     session.add(obj)
     await session.commit()
 
 
-async def orm_get_tasks(session: AsyncSession):
-    query = select(Task)
-    #.where(Task.uid == uid)
-    result = await session.execute(query)
-    return result.scalars().all()
+async def orm_get_tasks_by_group(session: AsyncSession, group_id: int):
+    tasks = await session.scalars(select(Task).where(Task.group == group_id))
+    return tasks
 
 
 async def orm_edit_task(session: AsyncSession, task_id: int, data: dict):
     query = update(Task).where(Task.id == task_id).values(
         group = data["group"],
         name = data["name"],
-        date = data["date"],
         is_done = False,
     )
     await session.execute(query)
